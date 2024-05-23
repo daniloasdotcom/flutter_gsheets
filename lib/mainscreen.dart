@@ -248,7 +248,7 @@ class _MainScreenState extends State<MainScreen> {
                     MaterialPageRoute(builder: (context) => DataPage()),
                   );
                 },
-                child: Text('Ver Dados Locais'),
+                child: Text('Ver Dados no Google Sheets'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,
                   backgroundColor: Color.fromARGB(255, 214, 216, 77),

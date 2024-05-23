@@ -10,10 +10,11 @@ class DataPage extends StatefulWidget {
 
 class _DataPageState extends State<DataPage> {
   List<Dados> _data = [];
-  List<String> _selectedItems = [];
+  List<int> _selectedIndices = [];
   bool _isLoading = true;
   String? _errorMessage;
   bool _selectAll = false;
+  bool _isDeleting = false; // Variável para indicar se está ocorrendo a exclusão
 
   @override
   void initState() {
@@ -41,23 +42,29 @@ class _DataPageState extends State<DataPage> {
   }
 
   Future<void> _deleteSelectedData() async {
-    for (String name in _selectedItems) {
+    setState(() {
+      _isDeleting = true; // Marca como processo de exclusão iniciado
+    });
+    for (int index in _selectedIndices) {
       try {
-        await Dados.deleteData(name);
+        await Dados.deleteData(_data[index].tratamento);
       } catch (error) {
         print('Error deleting data: $error');
       }
     }
-    _selectedItems.clear();
+    _selectedIndices.clear();
     _fetchData();
+    setState(() {
+      _isDeleting = false; // Marca como processo de exclusão concluído
+    });
   }
 
-  void _onItemChecked(String name, bool selected) {
+  void _onItemChecked(int index, bool selected) {
     setState(() {
       if (selected) {
-        _selectedItems.add(name);
+        _selectedIndices.add(index);
       } else {
-        _selectedItems.remove(name);
+        _selectedIndices.remove(index);
       }
     });
   }
@@ -66,9 +73,9 @@ class _DataPageState extends State<DataPage> {
     setState(() {
       _selectAll = value;
       if (value) {
-        _selectedItems = _data.map((item) => item.tratamento).toList();
+        _selectedIndices = List.generate(_data.length, (index) => index);
       } else {
-        _selectedItems.clear();
+        _selectedIndices.clear();
       }
     });
   }
@@ -81,81 +88,109 @@ class _DataPageState extends State<DataPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text('Lista de Dados', style: TextStyle(color: Colors.black)),
+        title: const Text('Lista de Dados', style: TextStyle(color: Colors.black)),
         backgroundColor: Color.fromARGB(255, 214, 216, 77)
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? Center(child: Text(_errorMessage!))
-              : Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: _data.length,
-                        itemBuilder: (context, index) {
-                          final item = _data[index];
-                          final isSelected =
-                              _selectedItems.contains(item.tratamento);
-                          return ListTile(
-                            title: Text(item.tratamento),
-                            subtitle: Text(
-                                'Altura: ${formatNumber(item.altura)}, Diâmetro: ${formatNumber(item.diametro)}'),
-                            trailing: Checkbox(
-                              value: isSelected,
-                              onChanged: (bool? value) {
-                                if (value != null) {
-                                  _onItemChecked(item.tratamento, value);
-                                }
+              : SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    child: DataTable(
+                      headingRowColor: MaterialStateColor.resolveWith((states) => Colors.grey[200]!),
+                      headingTextStyle: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                      columnSpacing: 8,
+                      dataRowColor: MaterialStateColor.resolveWith((states) => Colors.grey[100]!),
+                      columns: [
+                        DataColumn(label: Text('Tratamento')),
+                        DataColumn(label: Text('Altura')),
+                        DataColumn(label: Text('Diâmetro')),
+                      ],
+                      rows: _data
+                          .asMap()
+                          .entries
+                          .map(
+                            (entry) => DataRow(
+                              color: MaterialStateColor.resolveWith(
+                                (states) => _selectedIndices.contains(entry.key) ? Colors.blue[100]! : Colors.transparent,
+                              ),
+                              cells: [
+                                DataCell(Text(entry.value.tratamento)),
+                                DataCell(Text(formatNumber(entry.value.altura))),
+                                DataCell(Text(formatNumber(entry.value.diametro))),
+                              ],
+                              selected: _selectedIndices.contains(entry.key),
+                              onSelectChanged: (selected) {
+                                _onItemChecked(entry.key, selected!);
                               },
                             ),
-                          );
-                        },
+                          )
+                          .toList(),
+                    ),
+                  ),
+                ),
+      bottomNavigationBar: BottomAppBar(
+        color: Color.fromARGB(255, 214, 216, 77),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Checkbox(
+                    value: _selectAll,
+                    onChanged: _isLoading || _errorMessage != null
+                        ? null
+                        : (bool? value) {
+                            _onSelectAll(value!);
+                          },
+                  ),
+                  Text(
+                    'Selecionar Todos',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: _selectedIndices.isEmpty
+                    ? null
+                    : () {
+                        _deleteSelectedData();
+                      },
+                child: Row(
+                  children: [
+                    const Text(
+                      'Deletar',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 12,
                       ),
                     ),
-                    Container(
-                      color: Colors.grey[600], // Cor de fundo do rodapé
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Checkbox(
-                              value: _selectAll,
-                              onChanged: _isLoading || _errorMessage != null
-                                  ? null
-                                  : (bool? value) {
-                                      _onSelectAll(value!);
-                                    },
-                            ),
-                            const Text(
-                              'Selecionar Todos',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: _selectedItems.isEmpty
-                                  ? null
-                                  : () {
-                                      _deleteSelectedData();
-                                    },
-                              child: const Text(
-                                'Deletar Selecionados',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
+                    if (_isDeleting) // Se estiver deletando, exibe a mensagem
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8.0),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
