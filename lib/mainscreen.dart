@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_gsheets/dadoslocais.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_gsheets/dataspages.dart';
 import 'package:flutter_gsheets/googlesheets.dart';
 import 'package:flutter_gsheets/sheetscolumn.dart';
@@ -70,15 +73,12 @@ class _MainScreenState extends State<MainScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal:
-                        20.0), // Adiciona um padding horizontal de 20 unidades
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: DropdownButtonFormField<String>(
                   value: selectedTratamento,
                   hint: const Text('Selecione o Tratamento'),
-                  isExpanded: true, // Ocupa o máximo de espaço possível
-                  dropdownColor: const Color.fromARGB(
-                      255, 177, 120, 120), // Cor de fundo do dropdown
+                  isExpanded: true,
+                  dropdownColor: const Color.fromARGB(255, 177, 120, 120),
                   decoration: const InputDecoration(
                     labelText: 'Tratamento',
                     border: OutlineInputBorder(),
@@ -152,8 +152,7 @@ class _MainScreenState extends State<MainScreen> {
                 onPressed: () async {
                   if (selectedTratamento == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('Por favor, selecione um tratamento.')),
+                      SnackBar(content: Text('Por favor, selecione um tratamento.')),
                     );
                     return;
                   }
@@ -161,26 +160,81 @@ class _MainScreenState extends State<MainScreen> {
                   final feedback = {
                     SheetsColunm.tratamento: selectedTratamento!,
                     SheetsColunm.altura: double.tryParse(
-                            alturaController.text.replaceAll(',', '.')) ??
-                        0.0,
+                            alturaController.text.replaceAll(',', '.')) ?? 0.0,
                     SheetsColunm.diametro: double.tryParse(
-                            diametroController.text.replaceAll(',', '.')) ??
-                        0.0,
+                            diametroController.text.replaceAll(',', '.')) ?? 0.0,
                   };
 
-                  await SheetsFlutter.insert([feedback]);
+                  // Save locally
+                  final prefs = await SharedPreferences.getInstance();
+                  List<String> data = prefs.getStringList('localData') ?? [];
+                  data.add(jsonEncode(feedback));
+                  await prefs.setStringList('localData', data);
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Dados enviados com sucesso!')),
+                    SnackBar(content: Text('Dados armazenados localmente!')),
                   );
-                  alturaController.clear(); // Limpa o campo de altura
-                  diametroController.clear(); // Limpa o campo de diâmetro
+                  alturaController.clear();
+                  diametroController.clear();
                   setState(() {
-                    selectedTratamento =
-                        null; // Reseta o tratamento selecionado
+                    selectedTratamento = null;
                   });
                 },
-                child: Text('Enviar Dados'),
+                child: Text('Salvar Dados Localmente'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => LocalDataScreen()),
+                  );
+                },
+                child: Text('Ver Dados Locais'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  List<String> data = prefs.getStringList('localData') ?? [];
+                  if (data.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Nenhum dado para enviar.')),
+                    );
+                    return;
+                  }
+
+                  List rows = data.map((e) => jsonDecode(e)).toList();
+                  await SheetsFlutter.insert(rows.cast<Map<String, dynamic>>());
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Dados enviados para o Google Sheets!')),
+                  );
+                },
+                child: Text('Enviar Dados para Google Sheets'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.black,
+                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
+                ),
+              ),
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  alturaController.clear();
+                  diametroController.clear();
+                  setState(() {
+                    selectedTratamento = null;
+                  });
+                },
+                child: Text('Limpar Campos'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,
                   backgroundColor: Color.fromARGB(255, 214, 216, 77),
@@ -194,26 +248,10 @@ class _MainScreenState extends State<MainScreen> {
                     MaterialPageRoute(builder: (context) => DataPage()),
                   );
                 },
-                child: Text('Ir para a Página de Dados'),
+                child: Text('Ver Dados Locais'),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,
                   backgroundColor: Color.fromARGB(255, 214, 216, 77),
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  alturaController.clear(); // Limpa o campo de altura
-                  diametroController.clear(); // Limpa o campo de diâmetro
-                  setState(() {
-                    selectedTratamento =
-                        null; // Reseta o tratamento selecionado
-                  });
-                },
-                child: Text('Limpar Campos'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77), // Cor de fundo do botão de limpar
                 ),
               ),
             ],

@@ -10,7 +10,6 @@ class SheetsFlutter {
   // Credenciais da API do Google Sheets (JSON de credenciais deve ser colocado aqui)
   static const _sheetCredentials = r'''
   {
-    
   }
 ''';
 
