@@ -17,7 +17,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController alturaController = TextEditingController();
   final TextEditingController diametroController = TextEditingController();
+  final FocusNode alturaFocusNode = FocusNode();
+  final FocusNode diametroFocusNode = FocusNode();
   String? selectedTratamento;
+  bool isFormAlmostFilled = false;
 
   final List<String> tratamentoOptions = [
     'T1D0R1',
@@ -57,13 +60,50 @@ class _MainScreenState extends State<MainScreen> {
     'NID7,5R5'
   ];
 
+  void checkFormAlmostFilled() {
+    setState(() {
+      int filledCount = 0;
+      if (alturaController.text.isNotEmpty) filledCount++;
+      if (diametroController.text.isNotEmpty) filledCount++;
+      if (selectedTratamento != null) filledCount++;
+
+      isFormAlmostFilled = filledCount >= 2;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    alturaController.addListener(checkFormAlmostFilled);
+    diametroController.addListener(checkFormAlmostFilled);
+    alturaFocusNode.addListener(() {
+      setState(() {});
+    });
+    diametroFocusNode.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    alturaController.removeListener(checkFormAlmostFilled);
+    diametroController.removeListener(checkFormAlmostFilled);
+    alturaFocusNode.dispose();
+    diametroFocusNode.dispose();
+    alturaController.dispose();
+    diametroController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Coletor de dados', style: TextStyle(color: Colors.black)),
-        backgroundColor: const Color.fromARGB(255, 252, 255, 68),
+        centerTitle: true,
+        title: const Text('Coletor de dados',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF417ce0),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -72,186 +112,231 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Padding(
+              
+              Container(
+                width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: DropdownButtonFormField<String>(
-                  value: selectedTratamento,
-                  hint: const Text('Selecione o Tratamento'),
-                  isExpanded: true,
-                  dropdownColor: const Color.fromARGB(255, 177, 120, 120),
-                  decoration: const InputDecoration(
-                    labelText: 'Tratamento',
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blueAccent),
-                    ),
-                  ),
-                  items: tratamentoOptions
-                      .map((tratamento) => DropdownMenuItem<String>(
-                            value: tratamento,
-                            child: Text(tratamento),
-                          ))
-                      .toList(),
-                  onChanged: (value) {
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    alturaController.clear();
+                    diametroController.clear();
                     setState(() {
-                      selectedTratamento = value;
+                      selectedTratamento = null;
+                      isFormAlmostFilled = false;
                     });
                   },
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: alturaController,
-                decoration: InputDecoration(
-                  labelText: 'Altura',
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blueAccent),
+                  icon: const Icon(Icons.cleaning_services),
+                  label: const Text('Limpar Formulário'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF417ce0),
                   ),
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$')),
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    if (newValue.text.contains(',')) {
-                      return TextEditingValue(
-                        text: newValue.text.replaceAll(',', '.'),
-                        selection: newValue.selection,
-                      );
-                    }
-                    return newValue;
-                  }),
-                ],
               ),
-              SizedBox(height: 16),
-              TextField(
-                controller: diametroController,
-                decoration: InputDecoration(
-                  labelText: 'Diâmetro',
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blueAccent),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Tratamento',
+                    filled: true,
+                    fillColor: selectedTratamento != null
+                        ? Colors.grey[200]
+                        : Colors.white,
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blue),
+                    ),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedTratamento,
+                      hint: const Text('Selecione o Tratamento'),
+                      isExpanded: true,
+                      items: tratamentoOptions
+                          .map((tratamento) => DropdownMenuItem<String>(
+                                value: tratamento,
+                                child: Text(tratamento),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedTratamento = value;
+                          checkFormAlmostFilled();
+                        });
+                      },
+                    ),
                   ),
                 ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$')),
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    if (newValue.text.contains(',')) {
-                      return TextEditingValue(
-                        text: newValue.text.replaceAll(',', '.'),
-                        selection: newValue.selection,
-                      );
-                    }
-                    return newValue;
-                  }),
-                ],
               ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  if (selectedTratamento == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Por favor, selecione um tratamento.')),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: TextField(
+                  controller: alturaController,
+                  focusNode: alturaFocusNode,
+                  decoration: InputDecoration(
+                    labelText: 'Altura',
+                    labelStyle: TextStyle(
+                      color:
+                          alturaFocusNode.hasFocus ? Colors.red : Colors.grey,
+                    ),
+                    filled: true,
+                    fillColor: alturaFocusNode.hasFocus ||
+                            alturaController.text.isNotEmpty
+                        ? Colors.grey[200]
+                        : Colors.white,
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$')),
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      if (newValue.text.contains(',')) {
+                        return TextEditingValue(
+                          text: newValue.text.replaceAll(',', '.'),
+                          selection: newValue.selection,
+                        );
+                      }
+                      return newValue;
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: TextField(
+                  controller: diametroController,
+                  focusNode: diametroFocusNode,
+                  decoration: InputDecoration(
+                    labelText: 'Diâmetro',
+                    labelStyle: TextStyle(
+                      color: diametroFocusNode.hasFocus ? Colors.red : Colors.grey,
+                    ),
+                    filled: true,
+                    fillColor: diametroFocusNode.hasFocus ||
+                            diametroController.text.isNotEmpty
+                        ? Colors.grey[200]
+                        : Colors.white,
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
+                  ),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$')),
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      if (newValue.text.contains(',')) {
+                        return TextEditingValue(
+                          text: newValue.text.replaceAll(',', '.'),
+                          selection: newValue.selection,
+                        );
+                      }
+                      return newValue;
+                    }),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ElevatedButton.icon(
+                  onPressed: isFormAlmostFilled
+                      ? () async {
+                          if (selectedTratamento == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Por favor, selecione um tratamento.')),
+                            );
+                            return;
+                          }
+
+                          final feedback = {
+                            SheetsColunm.tratamento: selectedTratamento!,
+                            SheetsColunm.altura: double.tryParse(
+                                    alturaController.text
+                                        .replaceAll(',', '.')) ??
+                                0.0,
+                            SheetsColunm.diametro: double.tryParse(
+                                    diametroController.text
+                                        .replaceAll(',', '.')) ??
+                                0.0,
+                          };
+
+                          // Save locally
+                          final prefs = await SharedPreferences.getInstance();
+                          List<String> data =
+                              prefs.getStringList('localData') ?? [];
+                          data.add(jsonEncode(feedback));
+                          await prefs.setStringList('localData', data);
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Dados armazenados localmente!')),
+                          );
+                          alturaController.clear();
+                          diametroController.clear();
+                          setState(() {
+                            selectedTratamento = null;
+                            isFormAlmostFilled = false;
+                          });
+                        }
+                      : null,
+                  icon: const Icon(Icons.save),
+                  label: const Text('Salvar Dados Localmente'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor:
+                        isFormAlmostFilled ? Colors.green : Colors.grey,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LocalDataScreen()),
                     );
-                    return;
-                  }
-
-                  final feedback = {
-                    SheetsColunm.tratamento: selectedTratamento!,
-                    SheetsColunm.altura: double.tryParse(
-                            alturaController.text.replaceAll(',', '.')) ?? 0.0,
-                    SheetsColunm.diametro: double.tryParse(
-                            diametroController.text.replaceAll(',', '.')) ?? 0.0,
-                  };
-
-                  // Save locally
-                  final prefs = await SharedPreferences.getInstance();
-                  List<String> data = prefs.getStringList('localData') ?? [];
-                  data.add(jsonEncode(feedback));
-                  await prefs.setStringList('localData', data);
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Dados armazenados localmente!')),
-                  );
-                  alturaController.clear();
-                  diametroController.clear();
-                  setState(() {
-                    selectedTratamento = null;
-                  });
-                },
-                child: Text('Salvar Dados Localmente'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
+                  },
+                  icon: const Icon(Icons.storage),
+                  label: const Text('Ver Dados Locais'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF417ce0),
+                  ),
                 ),
               ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => LocalDataScreen()),
-                  );
-                },
-                child: Text('Ver Dados Locais'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  List<String> data = prefs.getStringList('localData') ?? [];
-                  if (data.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Nenhum dado para enviar.')),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const DataPage()),
                     );
-                    return;
-                  }
-
-                  List rows = data.map((e) => jsonDecode(e)).toList();
-                  await SheetsFlutter.insert(rows.cast<Map<String, dynamic>>());
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Dados enviados para o Google Sheets!')),
-                  );
-                },
-                child: Text('Enviar Dados para Google Sheets'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  alturaController.clear();
-                  diametroController.clear();
-                  setState(() {
-                    selectedTratamento = null;
-                  });
-                },
-                child: Text('Limpar Campos'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
-                ),
-              ),
-              SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => DataPage()),
-                  );
-                },
-                child: Text('Ver Dados no Google Sheets'),
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.black,
-                  backgroundColor: Color.fromARGB(255, 214, 216, 77),
+                  },
+                  icon: const Icon(Icons.view_list),
+                  label: const Text('Ver Dados no Google Sheets'),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFF417ce0),
+                  ),
                 ),
               ),
             ],
