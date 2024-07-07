@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gsheets/mainscreen.dart';
+import 'package:flutter_sheets/mainscreen.dart';
 import 'googlesheets.dart';
 
 void main() async{

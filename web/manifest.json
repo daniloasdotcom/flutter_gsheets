@@ -1,6 +1,6 @@
 {
-    "name": "flutter_gsheets",
-    "short_name": "flutter_gsheets",
+    "name": "flutter_sheets",
+    "short_name": "flutter_sheets",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -1,4 +1,4 @@
-package com.example.flutter_gsheets
+package com.example.flutter_sheets
 
 import io.flutter.embedding.android.FlutterActivity
 

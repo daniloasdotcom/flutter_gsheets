@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gsheets/googlesheets.dart';
-import 'package:flutter_gsheets/sheetscolumn.dart';
+import 'package:flutter_sheets/googlesheets.dart';
+import 'package:flutter_sheets/sheetscolumn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 

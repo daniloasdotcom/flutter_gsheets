@@ -1,11 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_gsheets/dadoslocais.dart';
+import 'package:flutter_sheets/dadoslocais.dart';
+import 'package:flutter_sheets/dataspages.dart';
+import 'package:flutter_sheets/sheetscolumn.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_gsheets/dataspages.dart';
-import 'package:flutter_gsheets/googlesheets.dart';
-import 'package:flutter_gsheets/sheetscolumn.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);

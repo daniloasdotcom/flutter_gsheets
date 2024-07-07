@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "flutter_gsheets" "\0"
+            VALUE "FileDescription", "flutter_sheets" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "flutter_gsheets" "\0"
+            VALUE "InternalName", "flutter_sheets" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "flutter_gsheets.exe" "\0"
-            VALUE "ProductName", "flutter_gsheets" "\0"
+            VALUE "OriginalFilename", "flutter_sheets.exe" "\0"
+            VALUE "ProductName", "flutter_sheets" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
