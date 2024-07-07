@@ -18,7 +18,7 @@ class Dados {
 
   static Future<List<Dados>> fetchAll() async {
     final response = await http.get(Uri.parse(
-        'https://script.google.com/macros/s/AKfycbx_-VLMTTi0mEl8CUypveg5Xsh8bzKIZJBDBQ2jafZ6ADuqGqzt1w3lJH-E-dTt1CT0/exec'));
+        ''));
     if (response.statusCode == 200) {
       List<dynamic> jsonResponse = jsonDecode(response.body);
       return jsonResponse.map((data) => Dados.fromJson(data)).toList();
@@ -30,7 +30,7 @@ class Dados {
   static Future<String> deleteData(String tratamento) async {
     final response = await http.post(
       Uri.parse(
-          'hhttps://script.google.com/macros/s/AKfycbx_-VLMTTi0mEl8CUypveg5Xsh8bzKIZJBDBQ2jafZ6ADuqGqzt1w3lJH-E-dTt1CT0/exec'),
+          ''),
       body: {
         'action': 'delete',
         'tratamento': tratamento
